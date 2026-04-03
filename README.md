@@ -6,11 +6,11 @@ Mapa 2D de deputados federais com base nas votações nominais de **Plenário** 
 
 - **ETL**: coleta e limpa dados brutos de votações, deputados e orientações partidárias, filtrando apenas votações de Plenário
 - **EDA**: analisa distribuições de votos, calcula coesão partidária e identifica deputados "rebeldes" (que mais divergem da maioria do seu partido)
-- **Mapa ideológico** *(em andamento)*: posiciona cada deputado num espaço 2D via PCA e agrupa em blocos ideológicos com k-means
+- **Mapa ideológico**: posiciona cada deputado num espaço 2D via PCA e agrupa em blocos ideológicos com K-Means
 
 ## Fonte de dados
 
-[Dados Abertos da Câmara dos Deputados](https://dadosabertos.camara.leg.br/swagger/api.html) — arquivos em massa (CSV).
+[Dados Abertos da Câmara dos Deputados](https://dadosabertos.camara.leg.br/swagger/api.html) — arquivos em massa (CSV com separador `;`).
 
 Arquivos utilizados:
 - `deputados.csv` — cadastro de todos os deputados (sem coluna de ID — extraído da URI)
@@ -26,7 +26,7 @@ data/processed/     -> Parquets tratados (saída do ETL)
 notebooks/
   01_etl.ipynb      -> Limpeza e transformação dos dados
   02_eda.ipynb      -> Análise exploratória, coesão e rebeldes
-  03_ideology.ipynb -> Mapa ideológico e clusters (em andamento)
+  03_pca.ipynb      -> Mapa ideológico e clusters
 ```
 
 ## Como rodar
@@ -68,8 +68,16 @@ Executar os notebooks em ordem (01 → 02 → 03).
 2. **Coesão partidária**: para cada votação, determina a maioria do partido (Sim vs Não); calcula taxa de concordância de cada deputado com seu partido; agrega por partido (partidos com ≥ 5 deputados)
 3. **Rebeldes**: ranking dos deputados com menor concordância com a maioria do partido (mínimo 50 votos Sim/Não)
 
+### Mapa ideológico (`03_pca.ipynb`)
+1. **Codificação**: Sim → +1, Não → −1, Abstenção/Obstrução → 0, Artigo 17/ausência → NaN (preenchido com 0)
+2. **Matriz deputado × votação**: pivô dos votos codificados; filtra deputados com < 50 votos
+3. **PCA**: centraliza a matriz (subtrai média de cada coluna) e projeta em 2 componentes principais
+4. **Mapa**: scatter plot PC1 × PC2, colorido por partido — PC1 separa esquerda/direita
+5. **K-Means**: agrupa deputados em k=3 clusters (governo, oposição, centrão) e compara com partidos
+6. **Variações**: testa k=4 e k=5 para verificar sub-estruturas
+
 ## Status
 
 - [x] ETL — dados limpos em Parquet
 - [x] EDA — coesão partidária + ranking de rebeldes
-- [ ] Mapa ideológico + clusters
+- [x] Mapa ideológico + clusters (PCA + K-Means)
